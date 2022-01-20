@@ -1,0 +1,27 @@
+version: '3'
+services:
+  #Python service
+  app:
+    build:
+      context: .
+    container_name: nvs_tgbot
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+    working_dir: /usr/src/app
+    volumes:
+      - ./:/usr/src/app
+    networks:
+      - app-network
+
+#Docker networks
+networks:
+  app-network:
+    driver: bridge
+
+#Volumes
+volumes:
+  dbdata:
+    driver: local
