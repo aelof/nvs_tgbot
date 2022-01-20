@@ -27,8 +27,7 @@ def sendtoall(message):
         chat_id = message.chat.id
         text = message.text
         bot.send_message(chat_id,
-                         'Ваше сообщение отправлено всем пользователям бота',
-                         reply_markup=phone_markup)
+                         'Ваше сообщение отправлено всем пользователям бота')
     except Exception as e:
         bot.send_message(chat_id,
                          'Что-то пошло не так, попробуйте заново',
