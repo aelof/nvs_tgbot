@@ -1,3 +1,5 @@
+from enum import Enum
+
 
 hello = '''!
 Я - специально обученный бот компании Новострой!
@@ -8,7 +10,15 @@ hello = '''!
 category_list = ['Инвестиции', 'Земельные участки', 'Дома', 'Видео обзоры']
 
 
-class State:
-    category = ''
-    geo = ''
-    kush = ''
+db_file = "database.vdb"
+
+
+class States(Enum):
+    """
+    Мы используем БД Vedis, в которой хранимые значения всегда строки,
+    поэтому и тут будем использовать тоже строки (str)
+    """
+    START = '0'
+    ENTER_CAT = '1'
+    ENTER_GEO = '2'
+    ENTER_KUSH = '3'
