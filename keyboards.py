@@ -39,4 +39,5 @@ kush_house_markup.add(btn1, btn2, btn3, btn4)
 
 phone_markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, one_time_keyboard=True)
 btn1 = types.KeyboardButton('Поделиться номером', request_contact=True)
-phone_markup.add(btn1)
+btn2 = types.KeyboardButton('× Отмена')
+phone_markup.add(btn1, btn2)

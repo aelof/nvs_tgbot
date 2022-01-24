@@ -11,7 +11,7 @@ bot = telebot.TeleBot(TOKEN,
 
 category_list = ['Инвестиции', 'Земельные участки', 'Дома', 'Видео обзоры']
 menu_list = ['Контакты', 'Заказать звонок', 'Помощь']
-
+back_list = ['↩ Назад', '× Отмена']
 
 @bot.message_handler(commands=['start', 'sendtoall'])
 def cmd_start(msg):
@@ -35,12 +35,15 @@ def investment(msg):
     bot.send_message(msg.chat.id, f'Отправка контакта оператору  {msg.from_user.first_name} {number}')
     bot.send_message(msg.chat.id, '<i>Переход в главное меню</i>', reply_markup=menu_markup)
 
-
-@bot.message_handler(func=lambda msg: msg.text == '↩ Назад')
+# return to main menu or caancel to share phone number
+@bot.message_handler(func=lambda msg: msg.text in back_list)
 def back(msg):
-    bot.send_message(
-        msg.chat.id, "Вы вернулись в начальное меню выбора объекта", reply_markup=menu_markup)
-    dbworker.set_state(msg.chat.id, States.ENTER_CAT.value)
+    if msg.text == '↩ Назад':
+        bot.send_message(msg.chat.id, "Вы вернулись в начальное меню выбора объекта", reply_markup=general_markup)
+        dbworker.set_state(msg.chat.id, States.ENTER_CAT.value)
+    else: 
+        bot.send_message(msg.chat.id, "Вы вернулись в главное меню", reply_markup=menu_markup)
+
 
 
 @bot.message_handler(func=lambda msg: msg.text == 'Найти объект')
