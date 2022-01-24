@@ -1,4 +1,5 @@
 from enum import Enum
+import string
 
 
 hello = '''!
@@ -22,3 +23,16 @@ class States(Enum):
     ENTER_CAT = '1'
     ENTER_GEO = '2'
     ENTER_KUSH = '3'
+
+
+class Target:
+    QUERY = []
+
+    def add_to_query(query):
+        Target.QUERY.append(query)
+
+    def show_query():
+        return Target.QUERY
+
+    def clear_query():
+        Target.QUERY.clear()

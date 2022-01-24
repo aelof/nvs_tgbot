@@ -4,7 +4,7 @@ from keyboards import (general_markup, geo_markup, kush_markup,
                        kush_house_markup, menu_markup)
 from helpers import hello, category_list
 import dbworker
-from helpers import States
+from helpers import States, Target
 
 bot = telebot.TeleBot(TOKEN,
                       parse_mode='HTML')  # You can set parse_mode by default. HTML or MARKDOWN
@@ -12,13 +12,15 @@ bot = telebot.TeleBot(TOKEN,
 
 @bot.message_handler(commands=['start', 'sendtoall'])
 def cmd_start(message):
-    bot.send_message(message.chat.id, "Хорошо, давайте выберем то, что Вас интересует:", reply_markup=menu_markup)
-    dbworker.set_state(message.chat.id, States.ENTER_CAT.value)
+    bot.send_message(
+        message.chat.id, f'Здравствуйте {message.from_user.first_name} {hello}', reply_markup=menu_markup)
+
 
 @bot.message_handler(func=lambda message: message.text == '↩ Назад')
 def back(message):
-        bot.send_message(message.chat.id, "Вы вернулись в начальное меню выбора объекта", reply_markup=menu_markup)
-        dbworker.set_state(message.chat.id, States.ENTER_CAT.value)
+    bot.send_message(
+        message.chat.id, "Вы вернулись в начальное меню выбора объекта", reply_markup=menu_markup)
+    dbworker.set_state(message.chat.id, States.ENTER_CAT.value)
 
 
 @bot.message_handler(func=lambda query: query.text == 'Найти объект')
@@ -31,27 +33,32 @@ def search_obj(message):
     dbworker.set_state(message.chat.id, States.ENTER_CAT.value)
 
 
-
-
 @bot.message_handler(func=lambda message: dbworker.get_current_state(message.chat.id) == States.ENTER_CAT.value)
 def investment(message):
     chat_id = message.chat.id
     bot.send_message(chat_id,
-                           'Давайте выберем город:', reply_markup=geo_markup)
+                     'Давайте выберем город:', reply_markup=geo_markup)
     dbworker.set_state(message.chat.id, States.ENTER_GEO.value)
-
-
+    Target.add_to_query(message.text)
 
 
 @bot.message_handler(func=lambda message: dbworker.get_current_state(message.chat.id) == States.ENTER_GEO.value)
-def user_entering_age(message):
+def entering_kush(message):
     if message.text in ['Геленджик', 'Анапа', 'Лаго-Наки']:
-        bot.send_message(message.chat.id, "Хорошо! Последний шаг - бюджет!", reply_markup=kush_markup)
+        Target.add_to_query(message.text)
+        bot.send_message(
+            message.chat.id, "Хорошо! Последний шаг - бюджет!", reply_markup=kush_markup)
         dbworker.set_state(message.chat.id, States.ENTER_KUSH.value)
 
+
 @bot.message_handler(func=lambda message: dbworker.get_current_state(message.chat.id) == States.ENTER_KUSH.value)
-def enter_kush(message):
-    bot.send_message(message.chat.id, 'Отправляется ссылка из ЦРМ', reply_markup=menu_markup)
+def final(message):
+    Target.add_to_query(message.text)
+    bot.send_message(message.chat.id, 'Отправляется ссылка из ЦРМ по запросу:')
+    bot.send_message(message.chat.id, str(Target.show_query()))
+    Target.clear_query()
+    bot.send_message(
+        message.chat.id, 'Для удобства Вы автоматически перенеправлены в главное меню', reply_markup=menu_markup)
 
 
 @bot.message_handler(content_types=['text'])
