@@ -6,12 +6,13 @@ from helpers import hello
 import dbworker
 from helpers import States, Target
 
-bot = telebot.TeleBot(TOKEN,
-                      parse_mode='HTML')  # You can set parse_mode by default. HTML or MARKDOWN
+# You can set parse_mode by default. HTML or MARKDOWN
+bot = telebot.TeleBot(TOKEN, parse_mode='HTML')
 
 category_list = ['Инвестиции', 'Земельные участки', 'Дома', 'Видео обзоры']
 menu_list = ['Контакты', 'Заказать звонок', 'Помощь']
 back_list = ['↩ Назад', '× Отмена']
+
 
 @bot.message_handler(commands=['start', 'sendtoall'])
 def cmd_start(msg):
@@ -26,24 +27,20 @@ def search_obj(msg):
     elif msg.text == 'Помощь':
         bot.send_message(msg.chat.id, 'Отправка блока c помощью')
     elif msg.text == 'Заказать звонок':
-        bot.send_message(msg.chat.id, 'Нажмите кнопку поделиться на клавиатуре', reply_markup=phone_markup)
+        bot.send_message(
+            msg.chat.id, 'Нажмите кнопку поделиться на клавиатуре', reply_markup=phone_markup)
 
 
-@bot.message_handler(content_types=['contact'])
-def investment(msg):
-    number = msg.contact.phone_number
-    bot.send_message(msg.chat.id, f'Отправка контакта оператору  {msg.from_user.first_name} {number}')
-    bot.send_message(msg.chat.id, '<i>Переход в главное меню</i>', reply_markup=menu_markup)
-
-# return to main menu or caancel to share phone number
+# return to main menu or cancel to share phone number
 @bot.message_handler(func=lambda msg: msg.text in back_list)
 def back(msg):
     if msg.text == '↩ Назад':
-        bot.send_message(msg.chat.id, "Вы вернулись в начальное меню выбора объекта", reply_markup=general_markup)
+        bot.send_message(
+            msg.chat.id, "Вы вернулись в начальное меню выбора объекта", reply_markup=general_markup)
         dbworker.set_state(msg.chat.id, States.ENTER_CAT.value)
-    else: 
-        bot.send_message(msg.chat.id, "Вы вернулись в главное меню", reply_markup=menu_markup)
-
+    else:
+        bot.send_message(
+            msg.chat.id, "Вы вернулись в главное меню", reply_markup=menu_markup)
 
 
 @bot.message_handler(func=lambda msg: msg.text == 'Найти объект')
@@ -69,10 +66,11 @@ def entering_kush(msg):
     if msg.text in ['Геленджик', 'Анапа', 'Лаго-Наки']:
         Target.add_to_query(msg.text)
         if Target.show_query()[0] == 'Дома':
-            bot.send_message(msg.chat.id, "Хорошо! Последний шаг - бюджет!", reply_markup=kush_house_markup)
+            bot.send_message(
+                msg.chat.id, "Хорошо! Последний шаг - бюджет!", reply_markup=kush_house_markup)
         else:
             bot.send_message(
-            msg.chat.id, "Хорошо! Последний шаг - бюджет!", reply_markup=kush_markup)
+                msg.chat.id, "Хорошо! Последний шаг - бюджет!", reply_markup=kush_markup)
         dbworker.set_state(msg.chat.id, States.ENTER_KUSH.value)
 
 
@@ -92,6 +90,15 @@ def investment(msg):
     msg = bot.send_message(chat_id,
                            'Что-то пошло не так, попробуйте заново',
                            reply_markup=general_markup)
+
+
+@bot.message_handler(content_types=['contact'])
+def investment(msg):
+    number = msg.contact.phone_number
+    bot.send_message(
+        msg.chat.id, f'Отправка контакта оператору  {msg.from_user.first_name} {number}')
+    bot.send_message(msg.chat.id, '<i>Переход в главное меню</i>',
+                     reply_markup=menu_markup)
 
 
 bot.infinity_polling(interval=0, timeout=20)
