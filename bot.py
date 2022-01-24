@@ -1,69 +1,91 @@
 import telebot
 from config import TOKEN
 from keyboards import (general_markup, geo_markup, kush_markup,
-                       kush_house_markup, menu_markup)
-from helpers import hello, category_list
+                       kush_house_markup, menu_markup, phone_markup)
+from helpers import hello
 import dbworker
 from helpers import States, Target
 
 bot = telebot.TeleBot(TOKEN,
                       parse_mode='HTML')  # You can set parse_mode by default. HTML or MARKDOWN
 
+category_list = ['Инвестиции', 'Земельные участки', 'Дома', 'Видео обзоры']
+menu_list = ['Контакты', 'Заказать звонок', 'Помощь']
+
 
 @bot.message_handler(commands=['start', 'sendtoall'])
-def cmd_start(message):
+def cmd_start(msg):
     bot.send_message(
-        message.chat.id, f'Здравствуйте {message.from_user.first_name} {hello}', reply_markup=menu_markup)
+        msg.chat.id, f'Здравствуйте {msg.from_user.first_name} {hello}', reply_markup=menu_markup)
 
 
-@bot.message_handler(func=lambda message: message.text == '↩ Назад')
-def back(message):
+@bot.message_handler(func=lambda msg: msg.text in menu_list)
+def search_obj(msg):
+    if msg.text == 'Контакты':
+        bot.send_message(msg.chat.id, 'Отправка блока контактов')
+    elif msg.text == 'Помощь':
+        bot.send_message(msg.chat.id, 'Отправка блока c помощью')
+    elif msg.text == 'Заказать звонок':
+        bot.send_message(msg.chat.id, 'Нажмите кнопку поделиться на клавиатуре', reply_markup=phone_markup)
+
+
+@bot.message_handler(content_types=['contact'])
+def investment(msg):
+    number = msg.contact.phone_number
+    bot.send_message(msg.chat.id, f'Отправка контакта оператору  {msg.from_user.first_name} {number}')
+    bot.send_message(msg.chat.id, '<i>Переход в главное меню</i>', reply_markup=menu_markup)
+
+
+@bot.message_handler(func=lambda msg: msg.text == '↩ Назад')
+def back(msg):
     bot.send_message(
-        message.chat.id, "Вы вернулись в начальное меню выбора объекта", reply_markup=menu_markup)
-    dbworker.set_state(message.chat.id, States.ENTER_CAT.value)
+        msg.chat.id, "Вы вернулись в начальное меню выбора объекта", reply_markup=menu_markup)
+    dbworker.set_state(msg.chat.id, States.ENTER_CAT.value)
 
 
-@bot.message_handler(func=lambda query: query.text == 'Найти объект')
-def search_obj(message):
-    chat_id = message.chat.id
-    bot.send_message(chat_id,
+@bot.message_handler(func=lambda msg: msg.text == 'Найти объект')
+def search_obj(msg):
+    bot.send_message(msg.chat.id,
                      'Хорошо 👌\nсейчас я помогу подобрать Вам объект\
                             \nвыберете, что Вас интересует',
                      reply_markup=general_markup)
-    dbworker.set_state(message.chat.id, States.ENTER_CAT.value)
+    dbworker.set_state(msg.chat.id, States.ENTER_CAT.value)
 
 
-@bot.message_handler(func=lambda message: dbworker.get_current_state(message.chat.id) == States.ENTER_CAT.value)
-def investment(message):
-    chat_id = message.chat.id
+@bot.message_handler(func=lambda msg: dbworker.get_current_state(msg.chat.id) == States.ENTER_CAT.value)
+def investment(msg):
+    chat_id = msg.chat.id
     bot.send_message(chat_id,
                      'Давайте выберем город:', reply_markup=geo_markup)
-    dbworker.set_state(message.chat.id, States.ENTER_GEO.value)
-    Target.add_to_query(message.text)
+    dbworker.set_state(msg.chat.id, States.ENTER_GEO.value)
+    Target.add_to_query(msg.text)
 
 
-@bot.message_handler(func=lambda message: dbworker.get_current_state(message.chat.id) == States.ENTER_GEO.value)
-def entering_kush(message):
-    if message.text in ['Геленджик', 'Анапа', 'Лаго-Наки']:
-        Target.add_to_query(message.text)
-        bot.send_message(
-            message.chat.id, "Хорошо! Последний шаг - бюджет!", reply_markup=kush_markup)
-        dbworker.set_state(message.chat.id, States.ENTER_KUSH.value)
+@bot.message_handler(func=lambda msg: dbworker.get_current_state(msg.chat.id) == States.ENTER_GEO.value)
+def entering_kush(msg):
+    if msg.text in ['Геленджик', 'Анапа', 'Лаго-Наки']:
+        Target.add_to_query(msg.text)
+        if Target.show_query()[0] == 'Дома':
+            bot.send_message(msg.chat.id, "Хорошо! Последний шаг - бюджет!", reply_markup=kush_house_markup)
+        else:
+            bot.send_message(
+            msg.chat.id, "Хорошо! Последний шаг - бюджет!", reply_markup=kush_markup)
+        dbworker.set_state(msg.chat.id, States.ENTER_KUSH.value)
 
 
-@bot.message_handler(func=lambda message: dbworker.get_current_state(message.chat.id) == States.ENTER_KUSH.value)
-def final(message):
-    Target.add_to_query(message.text)
-    bot.send_message(message.chat.id, 'Отправляется ссылка из ЦРМ по запросу:')
-    bot.send_message(message.chat.id, str(Target.show_query()))
+@bot.message_handler(func=lambda msg: dbworker.get_current_state(msg.chat.id) == States.ENTER_KUSH.value)
+def final(msg):
+    Target.add_to_query(msg.text)
+    bot.send_message(msg.chat.id, 'Отправляется ссылка из ЦРМ по запросу:')
+    bot.send_message(msg.chat.id, str(Target.show_query()))
     Target.clear_query()
     bot.send_message(
-        message.chat.id, 'Для удобства Вы автоматически перенеправлены в главное меню', reply_markup=menu_markup)
+        msg.chat.id, '<i>Для удобства Вы автоматически перенеправлены в главное меню</i>', reply_markup=menu_markup)
 
 
 @bot.message_handler(content_types=['text'])
-def investment(message):
-    chat_id = message.chat.id
+def investment(msg):
+    chat_id = msg.chat.id
     msg = bot.send_message(chat_id,
                            'Что-то пошло не так, попробуйте заново',
                            reply_markup=general_markup)
