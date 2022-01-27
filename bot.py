@@ -5,6 +5,7 @@ from keyboards import (general_markup, geo_markup, kush_markup,
 from helpers import hello
 import dbworker
 from helpers import States, Target
+from helpers import add_to_db, get_ids
 
 # You can set parse_mode by default. HTML or MARKDOWN
 bot = telebot.TeleBot(TOKEN, parse_mode='HTML')
@@ -13,11 +14,34 @@ category_list = ['Инвестиции', 'Земельные участки', '�
 menu_list = ['Контакты', 'Заказать звонок', 'Помощь']
 back_list = ['↩ Назад', '× Отмена']
 
+# handler for test
+@bot.message_handler(commands=['test'])
+def cmd_start(msg):
+    bot.send_message(msg.chat.id, f'{msg.chat.id}, {msg.from_user.id}')
+
 
 @bot.message_handler(commands=['start', 'sendtoall'])
 def cmd_start(msg):
-    bot.send_message(
-        msg.chat.id, f'Здравствуйте {msg.from_user.first_name} {hello}', reply_markup=menu_markup)
+    if msg.text == '/sendtoall':
+        target_msg = bot.send_message(msg.chat.id, ' Отправьте то, что нужно разослать другим:')
+        bot.register_next_step_handler(target_msg, send_to_all)
+    else:    
+        bot.send_message(
+        msg.chat.id, f'Здравствуйте, {msg.from_user.first_name} {hello}', reply_markup=menu_markup)
+        us_id = msg.from_user.id
+        us_firstname = msg.from_user.first_name
+        us_username = msg.from_user.username
+        us_date = msg.date
+        add_to_db(user_id=us_id, firstname = us_firstname, username=us_username, date=us_date)
+    
+
+def send_to_all(msg):
+    for chat_id in get_ids():
+        try:
+            bot.send_message(chat_id, msg.text )
+        except Exception as e:
+            bot.send_message(msg.chat.id, f'пользователь {chat_id} заблокировал бота')
+
 
 
 @bot.message_handler(func=lambda msg: msg.text in menu_list)
@@ -81,7 +105,7 @@ def final(msg):
     bot.send_message(msg.chat.id, str(Target.show_query()))
     Target.clear_query()
     bot.send_message(
-        msg.chat.id, '<i>Для удобства Вы автоматически перенеправлены в главное меню</i>', reply_markup=menu_markup)
+        msg.chat.id, '<i>Для удобства Вы перенеправлены в главное меню</i>', reply_markup=menu_markup)
 
 
 @bot.message_handler(content_types=['text'])
@@ -99,6 +123,9 @@ def investment(msg):
         msg.chat.id, f'Отправка контакта оператору  {msg.from_user.first_name} {number}')
     bot.send_message(msg.chat.id, '<i>Переход в главное меню</i>',
                      reply_markup=menu_markup)
+
+
+
 
 
 bot.infinity_polling(interval=0, timeout=20)
