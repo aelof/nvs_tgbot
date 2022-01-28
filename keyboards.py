@@ -1,19 +1,20 @@
 from telebot import types
 
 
-menu_markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True, input_field_placeholder='Ориентируйтесь по кнопкам ниже')
+menu_markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True, input_field_placeholder=' ')
 btn1 = types.KeyboardButton('Найти объект')
 btn2 = types.KeyboardButton('Контакты')
 btn3 = types.KeyboardButton('Заказать звонок')
 btn4 = types.KeyboardButton('Помощь')
 menu_markup.add(btn1, btn2, btn3, btn4)
 
-general_markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True, input_field_placeholder='Ориентируйтесь по кнопкам ниже')
+general_markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True, input_field_placeholder=' ')
 btn1 = types.KeyboardButton('Инвестиции')
 btn2 = types.KeyboardButton('Земельные участки')
 btn3 = types.KeyboardButton('Дома')
 btn4 = types.KeyboardButton('Видео обзоры')
-general_markup.add(btn1, btn2, btn3, btn4)
+btn5 = types.KeyboardButton('↩ Главное меню')
+general_markup.add(btn1, btn2, btn3, btn4, btn5)
 
 geo_markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
 btn1 = types.KeyboardButton('Геленджик')

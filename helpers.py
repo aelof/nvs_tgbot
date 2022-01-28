@@ -1,6 +1,9 @@
 from enum import Enum
 import sqlite3
 
+# db file to class States 
+db_file = "database.vdb"    
+
 
 conn = sqlite3.connect('Users.db', check_same_thread=False)
 conn.row_factory = lambda cursor, row: row[0] # for output in list format instead tuple
@@ -10,6 +13,14 @@ def add_to_db(user_id, firstname, username, date):
     cursor.execute('INSERT INTO Users (user_id, firstname, username, date) VALUES (?, ?, ?, ?)', (user_id, firstname, username, date))
     conn.commit()
 
+def add_phone_to_db(phone, user_id):
+    cursor.execute(f'UPDATE Users SET phone = ? WHERE user_id = ? ', (phone, user_id))
+    conn.commit()
+
+
+def get_ids():
+    cursor.execute('select user_id  from Users')
+    return cursor.fetchall()
 
 # try:
 #     with con:
@@ -17,7 +28,6 @@ def add_to_db(user_id, firstname, username, date):
 # except sqlite3.IntegrityError:
 #     print("couldn't add Python twice")
 
-db_file = "database.vdb"    
 
 
 class States(Enum):
@@ -41,13 +51,11 @@ class Target:
         Target.QUERY.clear()
 
 
-hello = '''!
-Я - специально обученный бот компании Новострой!
+hello = '''🙋‍♂️
+Я - Владимир, Ваш виртуальный помошник компании <a href='https://www.youtube.com/channel/UCRXMqWZwA6bH8DSd6SCOezg'>Новострой</a>!,
 Могу помочь Вам <b>то-то и то-то</b>\n
 Общаться мы будем с помощью клавиатуры с кнопками. Мне так понятнее понимать запрос.\n 
 Сейчас Вы в <b>главном меню</b>, ориентируйтесь по кнопкам ниже  '''
 
 
-def get_ids():
-    cursor.execute('select user_id  from Users')
-    return cursor.fetchall()
+
