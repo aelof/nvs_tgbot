@@ -9,6 +9,7 @@ from keyboards import (general_markup, geo_markup, kush_markup,
 
 logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)
+# telebot.logger.setLevel(logging.DEBUG)
 
 
 # You can set parse_mode by default. HTML or MARKDOWN
@@ -18,13 +19,14 @@ category_list = ['Инвестиции', 'Земельные участки', '�
 menu_list = ['Контакты', 'Заказать звонок', 'Помощь']
 back_list = ['↩ Назад', '× Отмена', '↩ Главное меню']
 kush_list = ['до 1 млн', '1 - 3 млн', '3+ млн', '5 - 7 млн', '7 - 10 млн', '10+ млн']
+teh_channel = -1001511156970
+
 
 # handler for test
-
-
 @bot.message_handler(commands=['test'])
 def cmd_start(msg):
-    bot.send_message(msg.chat.id, f'{msg.chat.id}, {msg.from_user.id}')
+    if msg.from_user.id == 239090651:
+        bot.send_message(teh_channel, f'{msg.chat.id}, {msg.from_user.id}')
 
 
 @bot.message_handler(commands=['start', 'sendtoall'])
@@ -139,7 +141,8 @@ def investment(msg):
 def investment(msg):
     phone = msg.contact.phone_number
     bot.send_message(msg.chat.id,
-                     f'Отправка контакта оператору:\n{msg.from_user.first_name} {phone}')
+                     'Оператор с Вами свяжется в ближайшее время, благодарим за обращение !')
+    bot.send_message(teh_channel, f'Новый заказ обратного звонка:\n+{phone}')                     
     bot.send_message(msg.chat.id, '<i>Переход в главное меню</i>',
                      reply_markup=menu_markup)
     add_phone_to_db(phone, msg.chat.id)
