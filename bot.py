@@ -73,8 +73,8 @@ def search_obj(msg):
 def back(msg):
     if msg.text == '↩ Назад':
         bot.send_message(msg.chat.id,
-                         "Вы вернулись в начальное меню выбора объекта", reply_markup=general_markup)
-        dbworker.set_state(msg.chat.id, States.ENTER_CAT.value)
+                         "Вы вернулись в начальное меню выбора объекта", reply_markup=geo_markup)
+        dbworker.set_state(msg.chat.id, States.ENTER_GEO.value)
         Target.clear_query()
     elif msg.text == '↩ Главное меню':
             bot.send_message(msg.chat.id,
@@ -89,33 +89,38 @@ def back(msg):
 def search_obj(msg):
     bot.send_message(msg.chat.id,
                      'Хорошо 👌\nсейчас я помогу подобрать Вам объект\
-                            \nвыберете, что Вас интересует',
-                     reply_markup=general_markup)
-    dbworker.set_state(msg.chat.id, States.ENTER_CAT.value)
-
-
-@bot.message_handler(func=lambda msg: dbworker.get_current_state(msg.chat.id) == States.ENTER_CAT.value)
-def investment(msg):
-    if msg.text in category_list:
-        bot.send_message(msg.chat.id,
-                        'Давайте выберем город:', reply_markup=geo_markup)
-        dbworker.set_state(msg.chat.id, States.ENTER_GEO.value)
-        Target.add_to_query(msg.text)
-    else:
-        bot.send_message(msg.chat.id, 'На клавиатуре такого не было!')
+                            \nвыберете локацию:',
+                     reply_markup=geo_markup)
+    dbworker.set_state(msg.chat.id, States.ENTER_GEO.value)
 
 
 @bot.message_handler(func=lambda msg: dbworker.get_current_state(msg.chat.id) == States.ENTER_GEO.value)
 def entering_kush(msg):
     if msg.text in ['Геленджик', 'Анапа', 'Лаго-Наки']:
         Target.add_to_query(msg.text)
-        if Target.show_query()[0] == 'Дома':
+        bot.send_message(msg.chat.id,
+                             "С локацией определились! Теперь давайте выберем что Вас интересует", reply_markup=general_markup)
+        dbworker.set_state(msg.chat.id, States.ENTER_CAT.value)
+    else: 
+        bot.send_message(msg.chat.id,
+                             "Выберете доступный вариант из меню ниже")
+        
+        
+
+@bot.message_handler(func=lambda msg: dbworker.get_current_state(msg.chat.id) == States.ENTER_CAT.value)
+def investment(msg):
+    Target.add_to_query(msg.text)
+    if msg.text in category_list:
+        if Target.show_query()[1] == 'Дома':
             bot.send_message(msg.chat.id,
-                             "Хорошо! Последний шаг - бюджет для Дома", reply_markup=kush_house_markup)
+                        'А теперь давайте выберем бюджет', reply_markup=kush_house_markup)
         else:
-            bot.send_message(msg.chat.id,
-                             "Хорошо! Последний шаг - бюджет!", reply_markup=kush_markup)
+             bot.send_message(msg.chat.id,
+                        'А теперь давайте выберем бюджет', reply_markup=kush_markup)
         dbworker.set_state(msg.chat.id, States.ENTER_KUSH.value)
+    else:
+        bot.send_message(msg.chat.id, 'На клавиатуре такого не было!')
+
 
 
 @bot.message_handler(func=lambda msg: dbworker.get_current_state(msg.chat.id) == States.ENTER_KUSH.value)

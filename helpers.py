@@ -33,8 +33,8 @@ def get_ids():
 class States(Enum):
     
     START = '0'
-    ENTER_CAT = '1'
-    ENTER_GEO = '2'
+    ENTER_GEO = '1'
+    ENTER_CAT = '2'
     ENTER_KUSH = '3'
 
 
