@@ -2,7 +2,7 @@ import telebot
 from config import TOKEN
 import dbworker
 import logging
-from helpers import States, Target, hello, add_to_db, get_ids, add_phone_to_db
+from helpers import States, Target, hello, add_to_db, get_ids, add_phone_to_db, get_link
 from keyboards import (general_markup, geo_markup, kush_markup,
                        kush_house_markup, menu_markup, phone_markup)
 
@@ -129,8 +129,8 @@ def investment(msg):
 def final(msg):
     if msg.text in kush_list:
         Target.add_to_query(msg.text)
-        bot.send_message(msg.chat.id, 'Отправляется ссылка из ЦРМ по запросу:')
-        bot.send_message(msg.chat.id, str(Target.show_query()))
+        bot.send_message(msg.chat.id, 'Пожалуйста, вот ваша индивидуальная подборка:')
+        bot.send_message(msg.chat.id, get_link(*Target.show_query()))
         Target.clear_query()
         bot.send_message(msg.chat.id,
                          '<i>Для удобства Вы перенеправлены в главное меню</i>', reply_markup=menu_markup)
