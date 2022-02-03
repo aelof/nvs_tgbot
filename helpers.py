@@ -22,6 +22,15 @@ def get_ids():
     cursor.execute('select user_id  from Users')
     return cursor.fetchall()
 
+def get_link(where, what, how):
+    conn = sqlite3.connect('links.db', check_same_thread=False)
+    cursor = conn.cursor()
+    try:
+        cursor.execute('SELECT Ссылка FROM Sheet1 WHERE Территория=? AND Категория=?  AND Бюджет=?', (where, what, how) )
+        return cursor.fetchone()
+    except:
+        return False
+    
 # try:
 #     with con:
 #         con.execute("insert into lang(name) values (?)", ("Python",))
