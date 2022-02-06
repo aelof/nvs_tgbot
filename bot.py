@@ -32,6 +32,7 @@ def cmd_start(msg):
 
 @bot.message_handler(commands=['start', 'sendtoall'])
 def cmd_start(msg):
+    Target.clear_query()
     if msg.text == '/sendtoall':
         target_msg = bot.send_message(
             msg.chat.id, ' Отправьте то, что нужно разослать другим:')
@@ -129,11 +130,16 @@ def investment(msg):
 def final(msg):
     if msg.text in kush_list:
         Target.add_to_query(msg.text)
-        bot.send_message(msg.chat.id, 'Пожалуйста, вот ваша индивидуальная подборка:')
-        bot.send_message(msg.chat.id, get_link(*Target.show_query()))
+        try:
+            bot.send_message(msg.chat.id, get_link(*Target.show_query() ) )
+            bot.send_message(msg.chat.id, '☝️ вот ваша индивидуальная подборка' )
+            bot.send_message(msg.chat.id,
+                             '<i>Для удобства Вы перенеправлены в главное меню</i>', reply_markup=menu_markup)
+        except:
+            bot.send_message(
+                msg.chat.id, 'Где-то ошибка, попробуйте перезапустить меня через меню ')
+
         Target.clear_query()
-        bot.send_message(msg.chat.id,
-                         '<i>Для удобства Вы перенеправлены в главное меню</i>', reply_markup=menu_markup)
 
 
 @bot.message_handler(content_types=['text'])
