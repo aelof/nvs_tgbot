@@ -2,7 +2,7 @@ import telebot
 from config import TOKEN
 import dbworker
 import logging
-from helpers import States, Target, hello, add_to_db, get_ids, add_phone_to_db, get_link
+from helpers import States, Target, hello, help,  add_to_db, get_ids, add_phone_to_db, get_link
 from keyboards import (general_markup, geo_markup, kush_markup,
                        kush_house_markup, menu_markup, phone_markup)
 
@@ -64,7 +64,7 @@ def search_obj(msg):
             msg.chat.id, 'Отправка блока контактов со всеми номерами и социальными сетями компании')
     elif msg.text == 'Помощь':
         bot.send_message(
-            msg.chat.id, 'Отправка блока c помощью(краткая информация о том, как извлечь максимальную пользу от бота)')
+            msg.chat.id, help)
     elif msg.text == 'Видео обзоры':
         bot.send_message(
             msg.chat.id, 'its still empty')
@@ -137,7 +137,9 @@ def final(msg):
                              '<i>Для удобства Вы перенеправлены в главное меню</i>', reply_markup=menu_markup)
         except:
             bot.send_message(
-                msg.chat.id, 'Где-то ошибка, попробуйте перезапустить меня через меню ')
+                msg.chat.id, 'Такая подборка ещё не готова или редактирутся в данный момент')
+            bot.send_message(msg.chat.id,
+                             '<i>Для удобства Вы перенеправлены в главное меню</i>', reply_markup=menu_markup)
 
         Target.clear_query()
 
