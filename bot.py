@@ -163,4 +163,4 @@ def investment(msg):
     add_phone_to_db(phone, msg.chat.id)
 
 
-bot.infinity_polling(interval=0, timeout=20)
+bot.infinity_polling(interval=1.5, timeout=80 )

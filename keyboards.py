@@ -20,7 +20,7 @@ geo_markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
 btn1 = types.KeyboardButton('Геленджик')
 btn2 = types.KeyboardButton('Анапа')
 btn3 = types.KeyboardButton('Лаго-Наки')
-btn4 = types.KeyboardButton('↩ Назад')
+btn4 = types.KeyboardButton('× Отмена')
 geo_markup.add(btn1, btn2, btn3, btn4)
 
 kush_markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True)
