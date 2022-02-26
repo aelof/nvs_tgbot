@@ -15,6 +15,7 @@ def db_insert_user_info(name, user_id, firstname, username, reg_date):
     cursor.execute('INSERT INTO Users (name, user_id, firstname, username, reg_date) VALUES (?, ?, ?, ?, ?)',
                    (name, user_id, firstname, username, reg_date))
     conn.commit()
+    conn.close()
 
 
 def get_ids():
@@ -33,25 +34,25 @@ def db_get_link(where, what, how):
         return False
 
 
-def db_insert_phone(user_id, phone):
+def db_insert_phone(id, phone):
     cursor.execute(
-        f'UPDATE Users SET phone = ? WHERE user_id = ? ', (phone, user_id))
+        f'UPDATE Users SET phone = ? WHERE user_id = ? ', (phone, id))
     conn.commit()
 
 
-def exist_phone(user_id):
-    cursor.execute('SELECT phone FROM Users WHERE user_id=user_id')
+def exist_phone(id):
+    cursor.execute('SELECT phone FROM Users WHERE user_id=?', (id,))
     if cursor.fetchone():
         return True
     else:
         return False
 
 
-def get_phone(user_id):
+def get_phone(id):
     '''
     Just get phone from DB
     '''
-    cursor.execute('SELECT phone FROM Users WHERE user_id=user_id')
+    cursor.execute('SELECT phone FROM Users WHERE user_id=?', (id,))
     return cursor.fetchone()
 
 
@@ -59,18 +60,18 @@ def exist_name(user_id):
     '''
     Check if name already in DB
     '''
-    cursor.execute('SELECT name FROM Users WHERE user_id=user_id')
+    cursor.execute('SELECT name FROM Users WHERE user_id=?', (id,))
     if cursor.fetchone():
         return True
     else:
         return False
 
 
-def get_name(user_id):
+def get_name(id):
     '''
     Just get name from DB
     '''
-    cursor.execute('SELECT name FROM Users WHERE user_id=user_id')
+    cursor.execute('SELECT name FROM Users WHERE user_id=?', (id,))
     return cursor.fetchone()
 
 

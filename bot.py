@@ -25,13 +25,13 @@ def cmd_start(msg):
 
 
 #first touch with user
-@bot.message_handler(commands=['start' ])
+@bot.message_handler(commands=['start'])
 def first_message(msg):
     Target.clear_query()
-
-    if msg.text == '/start' and exist_name(msg.chat.id):
-        bot.send_message(msg.chat.id,
-                        f'И снова здравствуйте, {get_name(msg.chat.id)}! \nПеренаправляю Вас в главное меню',
+    id = msg.from_user.id
+    if get_name(id):
+        bot.send_message(id,
+                        f'И снова здравствуйте, {get_name(id)}! \nПеренаправляю Вас в главное меню',
                         reply_markup=menu_markup)
     else:
         bot.send_message(msg.chat.id, f'Здравствуйте{hello}', reply_markup=hide_markup)
@@ -44,17 +44,18 @@ def first_message(msg):
 # after enter name 
 @bot.message_handler(func=lambda msg: dbworker.get_current_state(msg.chat.id) == States.NAME.value)
 def entering_kush(msg):
-    User.name = msg.text
-    bot.send_message(msg.chat.id, f'Рад знакомству, {User.name}!')
+    bot.send_message(msg.chat.id, f'Рад знакомству, {msg.text}!')
     bot.send_message(msg.chat.id,
                     f'Перенаправляю Вас в главное меню \nОриентируйтесь по кнопкам снизу', reply_markup=menu_markup)
     dbworker.set_state(msg.from_user.id, States.MENU.value)
     
+
+    name = msg.text
     user_id = msg.from_user.id
     user_firstname = msg.from_user.first_name
     user_username = msg.from_user.username
     user_date = datetime.utcfromtimestamp(msg.date).strftime('%y-%m-%d')
-    db_insert_user_info(name = User.name,
+    db_insert_user_info(name = name,
                         user_id=user_id,
                         firstname=user_firstname,
                         username=user_username,
@@ -159,7 +160,7 @@ def before_final(msg):
         if exist_phone(msg.chat.id):
             bot.send_message(msg.chat.id, db_get_link(*Target.show_query()))
             bot.send_message(
-                msg.chat.id, '☝️ вот ваша индивидуальная подборка')
+                msg.chat.id, f'{get_name(msg.chat.id)}, ☝️ вот ваша индивидуальная подборка')
             bot.send_message(msg.chat.id,
                              '<i>Для удобства Вы перенеправлены в главное меню</i>',
                              reply_markup=menu_markup, disable_notification=True)
@@ -175,7 +176,8 @@ def handle_contact(msg):
     if dbworker.get_current_state(msg.from_user.id) == States.PHONE.value:
         phone = msg.contact.phone_number
         bot.send_message(msg.chat.id, db_get_link(*Target.show_query()))
-        bot.send_message(msg.chat.id, '☝️ вот ваша индивидуальная подборка')
+        bot.send_message(
+                msg.chat.id, f'{get_name(msg.chat.id)}, ☝️ вот ваша индивидуальная подборка')
         bot.send_message(msg.chat.id,
                          '<i>Для удобства Вы перенеправлены в главное меню</i>',
                          reply_markup=menu_markup,  disable_notification=True)
@@ -188,8 +190,8 @@ def handle_contact(msg):
             teh_channel, f'Новый заказ обратного звонка:\n{phone}')
         bot.send_message(msg.chat.id, '<i>Перенаправляю в главное меню</i>',
                          reply_markup=menu_markup, disable_notification=True)
-    # print('!!!___!!! ', msg)
-    if exist_phone(msg.from_user.id):   # type contact not contains chat
+                         
+    if exist_phone(msg.from_user.id):
         pass
     else:
         db_insert_phone(msg.from_user.id, phone)
@@ -203,4 +205,4 @@ def investment(msg):
                            reply_markup=general_markup)
 
 
-bot.infinity_polling(interval=1.5, timeout=80)
+bot.infinity_polling(interval=1.5, timeout=80, skip_pending=True)

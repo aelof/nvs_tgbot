@@ -19,5 +19,5 @@ def set_state(user_id, value):
             db[user_id] = value
             return True
         except:
-            # тут желательно как-то обработать ситуацию
+            print('Error with vedis')
             return False
