@@ -1,5 +1,6 @@
 from telebot import types
 
+hide_markup = types.ReplyKeyboardRemove()
 
 menu_markup = types.ReplyKeyboardMarkup(row_width=2, resize_keyboard=True, input_field_placeholder=' ')
 btn1 = types.KeyboardButton('Найти объект')

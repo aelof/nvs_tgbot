@@ -4,10 +4,9 @@ import dbworker
 import logging
 from datetime import datetime
 from helpers import States, Target, User, exist_name, get_name
-from helpers import exist_phone, db_insert_user_info, get_ids, db_get_link, db_insert_phone
+from helpers import exist_phone, db_insert_user_info, get_ids, db_get_link, db_insert_phone, get_phone
 from helpers import hello, help, category_list, menu_list, back_list, kush_list, teh_channel
-from keyboards import (general_markup, geo_markup, kush_markup,
-                       kush_house_markup, menu_markup, phone_markup)
+from keyboards import general_markup, geo_markup, kush_markup, kush_house_markup, menu_markup, phone_markup, hide_markup
     
 
 
@@ -31,11 +30,11 @@ def first_message(msg):
     Target.clear_query()
 
     if msg.text == '/start' and exist_name(msg.chat.id):
-        bot.send_message(msg.chat.id, f'И снова здрувствуйте, {get_name(msg.chat.id)}')
-        bot.send_message(msg.chat.id, f'Перенаправляю Вас в главное меню', reply_markup=menu_markup)
-
+        bot.send_message(msg.chat.id,
+                        f'И снова здравствуйте, {get_name(msg.chat.id)}! \nПеренаправляю Вас в главное меню',
+                        reply_markup=menu_markup)
     else:
-        bot.send_message(msg.chat.id, f'Здравствуйте{hello}')
+        bot.send_message(msg.chat.id, f'Здравствуйте{hello}', reply_markup=hide_markup)
         bot.send_message(msg.chat.id, 'А как Вас зовут ? ')
         bot.send_message(msg.chat.id,
                         '<i>Введите Ваше имя в текстовое поле</i>')
@@ -47,8 +46,8 @@ def first_message(msg):
 def entering_kush(msg):
     User.name = msg.text
     bot.send_message(msg.chat.id, f'Рад знакомству, {User.name}!')
-    bot.send_message(msg.chat.id, f'Перенаправляю Вас в главное меню', reply_markup=menu_markup)
-    bot.send_message(msg.chat.id, f'Ориентируйтесь по кнопкам снизу')
+    bot.send_message(msg.chat.id,
+                    f'Перенаправляю Вас в главное меню \nОриентируйтесь по кнопкам снизу', reply_markup=menu_markup)
     dbworker.set_state(msg.from_user.id, States.MENU.value)
     
     user_id = msg.from_user.id
@@ -90,8 +89,14 @@ def search_obj(msg):
         bot.send_message(
             msg.chat.id, 'its still empty')
     elif msg.text == 'Заказать звонок':
-        bot.send_message(
-            msg.chat.id, 'Нажмите кнопку поделиться на клавиатуре', reply_markup=phone_markup)
+        if exist_phone(msg.chat.id):
+            bot.send_message(msg.chat.id, f'Хоршо, {get_name(msg.chat.id)} cкоро с Вами свяжется оператор')
+            bot.send_message(msg.chat.id, '<i>Перенаправляю в главное меню</i>',
+                         reply_markup=menu_markup, disable_notification=True)
+            bot.send_message(teh_channel, f'Новый заказ обратного звонка:\n{get_phone(msg.chat.id)}')
+
+        else:
+            bot.send_message(msg.chat.id, 'Нажмите кнопку поделиться на клавиатуре', reply_markup=phone_markup)
 
 
 # return to main menu or cancel to share phone number
@@ -181,7 +186,7 @@ def handle_contact(msg):
                          'Оператор с Вами свяжется в ближайшее время, благодарим за обращение !')
         bot.send_message(
             teh_channel, f'Новый заказ обратного звонка:\n{phone}')
-        bot.send_message(msg.chat.id, '<i>Переход в главное меню</i>',
+        bot.send_message(msg.chat.id, '<i>Перенаправляю в главное меню</i>',
                          reply_markup=menu_markup, disable_notification=True)
     # print('!!!___!!! ', msg)
     if exist_phone(msg.from_user.id):   # type contact not contains chat

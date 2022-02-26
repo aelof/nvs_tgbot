@@ -47,6 +47,14 @@ def exist_phone(user_id):
         return False
 
 
+def get_phone(user_id):
+    '''
+    Just get phone from DB
+    '''
+    cursor.execute('SELECT phone FROM Users WHERE user_id=user_id')
+    return cursor.fetchone()
+
+
 def exist_name(user_id):
     '''
     Check if name already in DB
@@ -56,6 +64,7 @@ def exist_name(user_id):
         return True
     else:
         return False
+
 
 def get_name(user_id):
     '''
