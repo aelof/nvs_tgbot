@@ -2,7 +2,7 @@ import telebot
 from config import TOKEN
 import dbworker
 import logging
-from helpers import States, Target, hello, help,  add_to_db, get_ids, add_phone_to_db, get_link
+from helpers import States, Target, exist_phone, hello, help,  add_to_db, get_ids,  db_get_link, db_insert_phone
 from keyboards import (general_markup, geo_markup, kush_markup,
                        kush_house_markup, menu_markup, phone_markup)
 
@@ -79,12 +79,12 @@ def back(msg):
     if msg.text == '↩ Назад':
         bot.send_message(msg.chat.id,
                          "Вы вернулись в начальное меню выбора объекта", reply_markup=geo_markup)
-        dbworker.set_state(msg.chat.id, States.ENTER_GEO.value)
+        dbworker.set_state(msg.chat.id, States.GEO.value)
         Target.clear_query()
     elif msg.text == '↩ Главное меню':
         bot.send_message(msg.chat.id,
                          "Вы вернулись в главное меню", reply_markup=menu_markup)
-        # dbworker.set_state(msg.chat.id, States.ENTER_CAT.value)
+        # dbworker.set_state(msg.chat.id, States.CAT.value)
     else:
         bot.send_message(
             msg.chat.id, "Вы вернулись в главное меню", reply_markup=menu_markup)
@@ -96,22 +96,22 @@ def search_obj(msg):
                      'Хорошо 👌\nсейчас я помогу подобрать Вам объект\
                             \nвыберете локацию:',
                      reply_markup=geo_markup)
-    dbworker.set_state(msg.chat.id, States.ENTER_GEO.value)
+    dbworker.set_state(msg.chat.id, States.GEO.value)
 
 
-@bot.message_handler(func=lambda msg: dbworker.get_current_state(msg.chat.id) == States.ENTER_GEO.value)
+@bot.message_handler(func=lambda msg: dbworker.get_current_state(msg.chat.id) == States.GEO.value)
 def entering_kush(msg):
     if msg.text in ['Геленджик', 'Анапа', 'Лаго-Наки']:
         Target.add_to_query(msg.text)
         bot.send_message(msg.chat.id,
                          "С локацией определились! Теперь давайте выберем что Вас интересует", reply_markup=general_markup)
-        dbworker.set_state(msg.chat.id, States.ENTER_CAT.value)
+        dbworker.set_state(msg.chat.id, States.CAT.value)
     else:
         bot.send_message(msg.chat.id,
                          "Выберете доступный вариант из меню ниже")
 
 
-@bot.message_handler(func=lambda msg: dbworker.get_current_state(msg.chat.id) == States.ENTER_CAT.value)
+@bot.message_handler(func=lambda msg: dbworker.get_current_state(msg.chat.id) == States.CAT.value)
 def investment(msg):
     Target.add_to_query(msg.text)
     if msg.text in category_list:
@@ -121,27 +121,54 @@ def investment(msg):
         else:
             bot.send_message(msg.chat.id,
                              'А теперь давайте выберем бюджет', reply_markup=kush_markup)
-        dbworker.set_state(msg.chat.id, States.ENTER_KUSH.value)
+        dbworker.set_state(msg.chat.id, States.KUSH.value)
     else:
         bot.send_message(msg.chat.id, 'На клавиатуре такого не было!')
 
 
-@bot.message_handler(func=lambda msg: dbworker.get_current_state(msg.chat.id) == States.ENTER_KUSH.value)
-def final(msg):
+@bot.message_handler(func=lambda msg: dbworker.get_current_state(msg.chat.id) == States.KUSH.value)
+def before_final(msg):
     if msg.text in kush_list:
         Target.add_to_query(msg.text)
-        try:
-            bot.send_message(msg.chat.id, get_link(*Target.show_query() ) )
+        if exist_phone(msg.chat.id):
+            bot.send_message(msg.chat.id, db_get_link(*Target.show_query() ) )
             bot.send_message(msg.chat.id, '☝️ вот ваша индивидуальная подборка' )
             bot.send_message(msg.chat.id,
-                             '<i>Для удобства Вы перенеправлены в главное меню</i>', reply_markup=menu_markup)
-        except:
-            bot.send_message(
-                msg.chat.id, 'Такая подборка ещё не готова или редактирутся в данный момент')
-            bot.send_message(msg.chat.id,
-                             '<i>Для удобства Вы перенеправлены в главное меню</i>', reply_markup=menu_markup)
+                            '<i>Для удобства Вы перенеправлены в главное меню</i>',
+                            reply_markup=menu_markup, disable_notification=True)
+        else:
+            bot.send_message(msg.chat.id, 'Чтобы получить подборку - поделитесь своим номером телефона', reply_markup=phone_markup)
+            dbworker.set_state(msg.chat.id, States.PHONE.value)
 
+
+@bot.message_handler(content_types=['contact'])
+def handle_contact(msg):
+    phone = msg.contact.phone_number
+    if dbworker.get_current_state(msg.from_user.id) == States.PHONE.value:
+        phone = msg.contact.phone_number
+        bot.send_message(msg.chat.id, db_get_link(*Target.show_query() ) )
+        bot.send_message(msg.chat.id, '☝️ вот ваша индивидуальная подборка' )
+        bot.send_message(msg.chat.id,
+                                '<i>Для удобства Вы перенеправлены в главное меню</i>',
+                                reply_markup=menu_markup,  disable_notification=True)
         Target.clear_query()
+
+    else:
+        bot.send_message(msg.chat.id,
+                        'Оператор с Вами свяжется в ближайшее время, благодарим за обращение !')
+        bot.send_message(teh_channel, f'Новый заказ обратного звонка:\n{phone}')
+        bot.send_message(msg.chat.id, '<i>Переход в главное меню</i>',
+                        reply_markup=menu_markup, disable_notification=True)
+    # print('!!!___!!! ', msg)
+    if exist_phone(msg.from_user.id):   # type contact not contains chat
+            pass
+    else:
+         db_insert_phone(msg.from_user.id, phone)
+
+
+
+
+
 
 
 @bot.message_handler(content_types=['text'])
@@ -152,15 +179,7 @@ def investment(msg):
                            reply_markup=general_markup)
 
 
-@bot.message_handler(content_types=['contact'])
-def investment(msg):
-    phone = msg.contact.phone_number
-    bot.send_message(msg.chat.id,
-                     'Оператор с Вами свяжется в ближайшее время, благодарим за обращение !')
-    bot.send_message(teh_channel, f'Новый заказ обратного звонка:\n{phone}')
-    bot.send_message(msg.chat.id, '<i>Переход в главное меню</i>',
-                     reply_markup=menu_markup)
-    add_phone_to_db(phone, msg.chat.id)
+
 
 
 bot.infinity_polling(interval=1.5, timeout=80 )

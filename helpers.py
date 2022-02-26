@@ -13,16 +13,12 @@ def add_to_db(user_id, firstname, username, date):
     cursor.execute('INSERT INTO Users (user_id, firstname, username, date) VALUES (?, ?, ?, ?)', (user_id, firstname, username, date))
     conn.commit()
 
-def add_phone_to_db(phone, user_id):
-    cursor.execute(f'UPDATE Users SET phone = ? WHERE user_id = ? ', (phone, user_id))
-    conn.commit()
-
 
 def get_ids():
     cursor.execute('select user_id  from Users')
     return cursor.fetchall()
 
-def get_link(where, what, how):
+def db_get_link(where, what, how):
     conn = sqlite3.connect('links.db', check_same_thread=False)
     cursor = conn.cursor()
     try:
@@ -30,21 +26,29 @@ def get_link(where, what, how):
         return cursor.fetchone()
     except:
         return False
-    
-# try:
-#     with con:
-#         con.execute("insert into lang(name) values (?)", ("Python",))
-# except sqlite3.IntegrityError:
-#     print("couldn't add Python twice")
+
+def db_insert_phone(user_id, phone):
+    cursor.execute(f'UPDATE Users SET phone = ? WHERE user_id = ? ', (phone, user_id))
+    conn.commit()
+
+
+def exist_phone(user_id):
+    cursor.execute('SELECT phone FROM Users WHERE user_id=user_id' )
+    if cursor.fetchone():
+        return True
+    else:
+        return False
+
 
 
 
 class States(Enum):
     
     START = '0'
-    ENTER_GEO = '1'
-    ENTER_CAT = '2'
-    ENTER_KUSH = '3'
+    GEO = '1'
+    CAT = '2'
+    KUSH = '3'
+    PHONE = '4'
 
 
 class Target:
