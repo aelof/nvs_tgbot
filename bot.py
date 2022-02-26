@@ -2,9 +2,13 @@ import telebot
 from config import TOKEN
 import dbworker
 import logging
-from helpers import States, Target, exist_phone, hello, help,  add_to_db, get_ids,  db_get_link, db_insert_phone
+from datetime import datetime
+from helpers import States, Target, User, exist_name, get_name
+from helpers import exist_phone, db_insert_user_info, get_ids, db_get_link, db_insert_phone
+from helpers import hello, help, category_list, menu_list, back_list, kush_list, teh_channel
 from keyboards import (general_markup, geo_markup, kush_markup,
                        kush_house_markup, menu_markup, phone_markup)
+    
 
 
 logger = telebot.logger
@@ -12,16 +16,7 @@ telebot.logger.setLevel(logging.INFO)
 # telebot.logger.setLevel(logging.DEBUG)
 
 
-# You can set parse_mode by default. HTML or MARKDOWN
 bot = telebot.TeleBot(TOKEN, parse_mode='HTML')
-
-category_list = ['Инвестиции', 'Земельные участки', 'Дома', ]
-menu_list = ['Контакты', 'Заказать звонок', 'Помощь', 'Видео обзоры']
-back_list = ['↩ Назад', '× Отмена', '↩ Главное меню']
-kush_list = ['до 1 млн', '1 - 3 млн', '3+ млн',
-             '5 - 7 млн', '7 - 10 млн', '10+ млн']
-teh_channel = -1001511156970
-
 
 # handler for test
 @bot.message_handler(commands=['test'])
@@ -30,22 +25,48 @@ def cmd_start(msg):
         bot.send_message(teh_channel, f'{msg.chat.id}, {msg.from_user.id}')
 
 
-@bot.message_handler(commands=['start', 'sendtoall'])
-def cmd_start(msg):
+#first touch with user
+@bot.message_handler(commands=['start' ])
+def first_message(msg):
     Target.clear_query()
-    if msg.text == '/sendtoall':
-        target_msg = bot.send_message(
-            msg.chat.id, ' Отправьте то, что нужно разослать другим:')
-        bot.register_next_step_handler(target_msg, send_to_all)
+
+    if msg.text == '/start' and exist_name(msg.chat.id):
+        bot.send_message(msg.chat.id, f'И снова здрувствуйте, {get_name(msg.chat.id)}')
+        bot.send_message(msg.chat.id, f'Перенаправляю Вас в главное меню', reply_markup=menu_markup)
+
     else:
-        bot.send_message(
-            msg.chat.id, f'Здравствуйте{hello}', reply_markup=menu_markup)
-        us_id = msg.from_user.id
-        us_firstname = msg.from_user.first_name
-        us_username = msg.from_user.username
-        us_date = msg.date
-        add_to_db(user_id=us_id, firstname=us_firstname,
-                  username=us_username, date=us_date)
+        bot.send_message(msg.chat.id, f'Здравствуйте{hello}')
+        bot.send_message(msg.chat.id, 'А как Вас зовут ? ')
+        bot.send_message(msg.chat.id,
+                        '<i>Введите Ваше имя в текстовое поле</i>')
+        dbworker.set_state(msg.chat.id, States.NAME.value)
+
+
+# after enter name 
+@bot.message_handler(func=lambda msg: dbworker.get_current_state(msg.chat.id) == States.NAME.value)
+def entering_kush(msg):
+    User.name = msg.text
+    bot.send_message(msg.chat.id, f'Рад знакомству, {User.name}!')
+    bot.send_message(msg.chat.id, f'Перенаправляю Вас в главное меню', reply_markup=menu_markup)
+    bot.send_message(msg.chat.id, f'Ориентируйтесь по кнопкам снизу')
+    dbworker.set_state(msg.from_user.id, States.MENU.value)
+    
+    user_id = msg.from_user.id
+    user_firstname = msg.from_user.first_name
+    user_username = msg.from_user.username
+    user_date = datetime.utcfromtimestamp(msg.date).strftime('%y-%m-%d')
+    db_insert_user_info(name = User.name,
+                        user_id=user_id,
+                        firstname=user_firstname,
+                        username=user_username,
+                        reg_date=user_date)
+
+
+@bot.message_handler(commands=['sendtoall'])
+def first_message(msg):
+    target_msg = bot.send_message(msg.chat.id,
+                                 'Отправьте то, что нужно разослать другим:')
+    bot.register_next_step_handler(target_msg, send_to_all)
 
 
 def send_to_all(msg):
@@ -131,13 +152,15 @@ def before_final(msg):
     if msg.text in kush_list:
         Target.add_to_query(msg.text)
         if exist_phone(msg.chat.id):
-            bot.send_message(msg.chat.id, db_get_link(*Target.show_query() ) )
-            bot.send_message(msg.chat.id, '☝️ вот ваша индивидуальная подборка' )
+            bot.send_message(msg.chat.id, db_get_link(*Target.show_query()))
+            bot.send_message(
+                msg.chat.id, '☝️ вот ваша индивидуальная подборка')
             bot.send_message(msg.chat.id,
-                            '<i>Для удобства Вы перенеправлены в главное меню</i>',
-                            reply_markup=menu_markup, disable_notification=True)
+                             '<i>Для удобства Вы перенеправлены в главное меню</i>',
+                             reply_markup=menu_markup, disable_notification=True)
         else:
-            bot.send_message(msg.chat.id, 'Чтобы получить подборку - поделитесь своим номером телефона', reply_markup=phone_markup)
+            bot.send_message(
+                msg.chat.id, 'Чтобы получить подборку - поделитесь своим номером телефона', reply_markup=phone_markup)
             dbworker.set_state(msg.chat.id, States.PHONE.value)
 
 
@@ -146,29 +169,25 @@ def handle_contact(msg):
     phone = msg.contact.phone_number
     if dbworker.get_current_state(msg.from_user.id) == States.PHONE.value:
         phone = msg.contact.phone_number
-        bot.send_message(msg.chat.id, db_get_link(*Target.show_query() ) )
-        bot.send_message(msg.chat.id, '☝️ вот ваша индивидуальная подборка' )
+        bot.send_message(msg.chat.id, db_get_link(*Target.show_query()))
+        bot.send_message(msg.chat.id, '☝️ вот ваша индивидуальная подборка')
         bot.send_message(msg.chat.id,
-                                '<i>Для удобства Вы перенеправлены в главное меню</i>',
-                                reply_markup=menu_markup,  disable_notification=True)
+                         '<i>Для удобства Вы перенеправлены в главное меню</i>',
+                         reply_markup=menu_markup,  disable_notification=True)
         Target.clear_query()
 
     else:
         bot.send_message(msg.chat.id,
-                        'Оператор с Вами свяжется в ближайшее время, благодарим за обращение !')
-        bot.send_message(teh_channel, f'Новый заказ обратного звонка:\n{phone}')
+                         'Оператор с Вами свяжется в ближайшее время, благодарим за обращение !')
+        bot.send_message(
+            teh_channel, f'Новый заказ обратного звонка:\n{phone}')
         bot.send_message(msg.chat.id, '<i>Переход в главное меню</i>',
-                        reply_markup=menu_markup, disable_notification=True)
+                         reply_markup=menu_markup, disable_notification=True)
     # print('!!!___!!! ', msg)
     if exist_phone(msg.from_user.id):   # type contact not contains chat
-            pass
+        pass
     else:
-         db_insert_phone(msg.from_user.id, phone)
-
-
-
-
-
+        db_insert_phone(msg.from_user.id, phone)
 
 
 @bot.message_handler(content_types=['text'])
@@ -179,7 +198,4 @@ def investment(msg):
                            reply_markup=general_markup)
 
 
-
-
-
-bot.infinity_polling(interval=1.5, timeout=80 )
+bot.infinity_polling(interval=1.5, timeout=80)
