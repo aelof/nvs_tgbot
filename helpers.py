@@ -91,6 +91,7 @@ class States(Enum):
     CAT = '3'
     KUSH = '4'
     PHONE = '5'
+    ORDER_CALL = '6'
 
 
 class Target:

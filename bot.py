@@ -6,7 +6,9 @@ from datetime import datetime
 from helpers import States, Target, User, exist_name, get_name
 from helpers import exist_phone, db_insert_user_info, get_ids, db_get_link, db_insert_phone, get_phone
 from helpers import hello, help, category_list, menu_list, back_list, kush_list, teh_channel
-from keyboards import general_markup, geo_markup, kush_markup, kush_house_markup, menu_markup, phone_markup, hide_markup, yt_markup
+from keyboards import ( general_markup, geo_markup, kush_markup,
+                      kush_house_markup, menu_markup, phone_markup,
+                      hide_markup, yt_markup, order_call_kb )
     
 
 
@@ -91,11 +93,8 @@ def search_obj(msg):
             msg.chat.id, 'Вот, пожалуйста: ', reply_markup=yt_markup)
     elif msg.text == 'Заказать звонок':
         if exist_phone(msg.chat.id):
-            bot.send_message(msg.chat.id, f'Хоршо, {get_name(msg.chat.id)} cкоро с Вами свяжется специалист')
-            bot.send_message(msg.chat.id, '<i>Перенаправляю в главное меню</i>',
-                         reply_markup=menu_markup, disable_notification=True)
-            bot.send_message(teh_channel, f'Новый заказ обратного звонка:\n{get_phone(msg.chat.id)}')
-
+            bot.send_message(msg.chat.id, 'Вы уверены?', reply_markup=order_call_kb)
+            dbworker.set_state(msg.chat.id, States.ORDER_CALL.value)
         else:
             bot.send_message(msg.chat.id, 'Нажмите кнопку поделиться на клавиатуре', reply_markup=phone_markup)
 
@@ -158,7 +157,6 @@ def before_final(msg):
     if msg.text in kush_list:
         Target.add_to_query(msg.text)
         if exist_phone(msg.chat.id):
-            print(Target.show_query())
             bot.send_message(msg.chat.id, db_get_link(*Target.show_query()))
             bot.send_message(
                 msg.chat.id, f'{get_name(msg.chat.id)}, ☝️ вот ваша индивидуальная подборка')
@@ -170,6 +168,15 @@ def before_final(msg):
             bot.send_message(
                 msg.chat.id, 'Чтобы получить подборку - поделитесь своим номером телефона', reply_markup=phone_markup)
             dbworker.set_state(msg.chat.id, States.PHONE.value)
+
+
+@bot.message_handler(func=lambda msg: dbworker.get_current_state(msg.chat.id) == States.ORDER_CALL.value)
+def order_call(msg):
+        if msg.text == "Да, заказать":
+            bot.send_message(msg.chat.id, f'Хоршо, {get_name(msg.chat.id)} cкоро с Вами свяжется специалист')
+            bot.send_message(msg.chat.id, '<i>Перенаправляю в главное меню</i>',
+                            reply_markup=menu_markup, disable_notification=True)
+            bot.send_message(teh_channel, f'Новый заказ обратного звонка:\n{get_phone(msg.chat.id)}')
 
 
 @bot.message_handler(content_types=['contact'])
@@ -207,4 +214,4 @@ def investment(msg):
                            reply_markup=general_markup)
 
 
-bot.infinity_polling(timeout=80, skip_pending=True)
+bot.infinity_polling(timeout=18, skip_pending=True)

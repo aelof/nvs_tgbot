@@ -44,6 +44,10 @@ btn1 = types.KeyboardButton('Поделиться номером', request_conta
 btn2 = types.KeyboardButton('× Отмена')
 phone_markup.add(btn1, btn2)
 
+order_call_kb = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, one_time_keyboard=True)
+btn1 = types.KeyboardButton('Да, заказать')
+btn2 = types.KeyboardButton('× Отмена')
+order_call_kb.add(btn1, btn2)
 
 
 # --- INLINE KEYBOARDS ---
