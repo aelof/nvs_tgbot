@@ -15,7 +15,6 @@ def db_insert_user_info(name, user_id, firstname, username, reg_date):
     cursor.execute('INSERT INTO Users (name, user_id, firstname, username, reg_date) VALUES (?, ?, ?, ?, ?)',
                    (name, user_id, firstname, username, reg_date))
     conn.commit()
-    conn.close()
 
 
 def get_ids():
