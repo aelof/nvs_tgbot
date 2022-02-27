@@ -43,3 +43,13 @@ phone_markup = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True, one_
 btn1 = types.KeyboardButton('Поделиться номером', request_contact=True)
 btn2 = types.KeyboardButton('× Отмена')
 phone_markup.add(btn1, btn2)
+
+
+
+# --- INLINE KEYBOARDS ---
+
+yt_markup = types.InlineKeyboardMarkup(row_width=1)
+btn1 = types.InlineKeyboardButton('Все видео', url='https://www.youtube.com/c/НовоСтройНедвижимость/videos')
+btn2 = types.InlineKeyboardButton('Плейлисты', url='https://www.youtube.com/c/НовоСтройНедвижимость/playlists')
+btn3 = types.InlineKeyboardButton('Канал', url='https://www.youtube.com/channel/UCRXMqWZwA6bH8DSd6SCOezg')
+yt_markup.add(btn1, btn2, btn3)
