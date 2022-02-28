@@ -3,7 +3,7 @@ from config import TOKEN
 import dbworker
 import logging, os 
 from datetime import datetime
-from helpers import States, Target, User, exist_name, get_name, sql_to_csv, admin_help
+from helpers import States, Target, User, db_insert_user_request, exist_name, exist_request, get_name, sql_to_csv, admin_help
 from helpers import exist_phone, db_insert_user_info, get_ids, db_get_link, db_insert_phone, get_phone
 from helpers import hello, help, contacts, category_list, menu_list, back_list, kush_list, teh_channel
 from keyboards import (general_markup, geo_markup, kush_markup,
@@ -178,6 +178,11 @@ def before_final(msg):
             bot.send_message(msg.chat.id,
                              '<i>Для удобства Вы перенеправлены в главное меню</i>',
                              reply_markup=menu_markup, disable_notification=True)
+            if exist_request(msg.chat.id):
+                pass
+            else:
+                db_insert_user_request(msg.chat.id, str(Target.show_query()) )
+            Target.clear_query()
 
         else:
             bot.send_message(
@@ -207,6 +212,10 @@ def handle_contact(msg):
         bot.send_message(msg.chat.id,
                          '<i>Для удобства Вы перенеправлены в главное меню</i>',
                          reply_markup=menu_markup,  disable_notification=True)
+        if exist_request(msg.chat.id):
+            pass
+        else:
+            db_insert_user_request(msg.chat.id, str(Target.show_query()) )
         Target.clear_query()
 
     else:

@@ -1,7 +1,7 @@
 from enum import Enum
 import pandas as pd
 import sqlite3
-import os
+
 
 # db file to class States
 db_file = "database.vdb"
@@ -25,6 +25,19 @@ def db_insert_user_info(name, user_id, firstname, username, reg_date):
     cursor.execute('INSERT INTO Users (name, user_id, firstname, username, reg_date) VALUES (?, ?, ?, ?, ?)',
                    (name, user_id, firstname, username, reg_date))
     conn.commit()
+
+
+def db_insert_user_request(id, user_request):
+    cursor.execute('UPDATE Users SET request = ? WHERE user_id = ?', (user_request, id) )
+    conn.commit()
+
+
+def exist_request(id):
+    cursor.execute('SELECT request FROM Users WHERE user_id=?', (id,))
+    if cursor.fetchone():
+        return True
+    else:
+        return False
 
 
 def get_ids():
@@ -84,6 +97,8 @@ def get_name(id):
     return cursor.fetchone()
 
 
+# --- Classes ---
+
 class User:
     name = None
 
@@ -115,6 +130,8 @@ class Target:
     def clear_query():
         Target.QUERY.clear()
 
+
+# --- STRINGS AND LISTS --- 
 
 hello = '''🙋‍♂️ 
 Я - Владимир, Ваш виртуальный помошник компании НОВОСТРОЙ!
