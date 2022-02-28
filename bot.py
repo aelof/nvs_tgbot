@@ -1,9 +1,9 @@
 import telebot
 from config import TOKEN
 import dbworker
-import logging
+import logging, os 
 from datetime import datetime
-from helpers import States, Target, User, exist_name, get_name
+from helpers import States, Target, User, exist_name, get_name, sql_to_csv, admin_help
 from helpers import exist_phone, db_insert_user_info, get_ids, db_get_link, db_insert_phone, get_phone
 from helpers import hello, help, contacts, category_list, menu_list, back_list, kush_list, teh_channel
 from keyboards import (general_markup, geo_markup, kush_markup,
@@ -68,20 +68,29 @@ def entering_kush(msg):
                         reg_date=user_date)
 
 
-@bot.message_handler(commands=['sendtoall'])
-def first_message(msg):
-    target_msg = bot.send_message(msg.chat.id,
-                                  'Отправьте то, что нужно разослать другим:')
-    bot.register_next_step_handler(target_msg, send_to_all)
+# handler for custom commands
+@bot.message_handler(commands=['admin', 'exportdb', 'sendtoall'])
+def admin_message(msg):
+    if msg.text == '/admin':
+        bot.send_message(msg.chat.id, admin_help)
+    if msg.text == '/sendtoall':
+        bot.send_message(msg.chat.id, 'этот раздел ещё дорабатывается')
+    if msg.text == '/exportdb':
+        if sql_to_csv():
+            path_to_db = os.getcwd() + '/Users.csv'
+            f = open(path_to_db,"rb")
+            bot.send_document(msg.chat.id, document=f)
+        else: 
+            bot.send_message(msg.chat.id, 'Произошла ошибка, напишите @alexpure')
 
 
-def send_to_all(msg):
-    for chat_id in get_ids():
-        try:
-            bot.send_message(chat_id, msg.text)
-        except Exception as e:
-            bot.send_message(
-                msg.chat.id, f'пользователь {chat_id} заблокировал бота')
+# def send_to_all(msg):
+#     for chat_id in get_ids():
+#         try:
+#             bot.send_message(chat_id, msg.text)
+#         except Exception as e:
+#             bot.send_message(
+#                 msg.chat.id, f'пользователь {chat_id} заблокировал бота')
 
 
 @bot.message_handler(func=lambda msg: msg.text in menu_list)
@@ -215,9 +224,7 @@ def handle_contact(msg):
 
 
 @bot.message_handler(content_types=['text'])
-def investment(msg):
-    chat_id = msg.chat.id
-    msg = bot.send_message(chat_id,
+def investment(msg):    msg = bot.send_message(msg.chat.id,
                            'Что-то пошло не так, попробуйте перезагрузить командой  /start',
                            reply_markup=general_markup)
 

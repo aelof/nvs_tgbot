@@ -1,5 +1,7 @@
 from enum import Enum
+import pandas as pd
 import sqlite3
+import os
 
 # db file to class States
 db_file = "database.vdb"
@@ -9,6 +11,14 @@ conn = sqlite3.connect('Users.db', check_same_thread=False)
 # for output in list format instead tuple
 conn.row_factory = lambda cursor, row: row[0]
 cursor = conn.cursor()
+
+def sql_to_csv():
+
+    conn = sqlite3.connect('Users.db', isolation_level=None,
+                       detect_types=sqlite3.PARSE_COLNAMES)
+    db_df = pd.read_sql_query("SELECT * FROM Users", conn)
+    db_df.to_csv('Users.csv', index=False)
+    return True
 
 
 def db_insert_user_info(name, user_id, firstname, username, reg_date):
@@ -113,14 +123,18 @@ hello = '''🙋‍♂️
 '''
 
 help = ''' В основном вся коммуникация с ботом будет происходить через встроенную клавиатуру\n 
-Во избижание ошибок внимательно читайте сообщения бота
+Во избижание ошибок внимательно читайте сообщения бота\n
 Если вдруг бот перестал отвечать или сообщает об ошибке - попробуйте перезапустить его через команду /start или выбрать эту же команду через меню 
 \nЕсли и это не помогает - напишите, пожалуйста, в поддержку @alexpure
 '''
 
-contacts = '''Офис в Геленджике  - \n
-Офис в Адыгее - \n
-Офис в Анапе -  \n
+contacts = '''Офис в Геленджике  lorem ipsum lorem ipsum lorem ipsum- \n
+Офис в Адыгее - lorem ipsum lorem ipsum lorem ipsum\n
+Офис в Анапе -  lorem ipsum lorem ipsum lorem ipsum\n
+'''
+
+admin_help = '''/sendtoall - рассылка\n
+/exportdb - выгрузить базу данных пользователей
 '''
 
 
