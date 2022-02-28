@@ -10,6 +10,7 @@ from keyboards import (general_markup, geo_markup, kush_markup,
                        kush_house_markup, menu_markup, phone_markup,
                        hide_markup, yt_markup, order_call_kb)
 
+from helpers import send_request_to_crm
 
 logger = telebot.logger
 telebot.logger.setLevel(logging.INFO)
@@ -212,12 +213,7 @@ def handle_contact(msg):
         bot.send_message(msg.chat.id,
                          '<i>Для удобства Вы перенеправлены в главное меню</i>',
                          reply_markup=menu_markup,  disable_notification=True)
-        if exist_request(msg.chat.id):
-            pass
-        else:
-            db_insert_user_request(msg.chat.id, str(Target.show_query()) )
-        Target.clear_query()
-
+    
     else:
         bot.send_message(msg.chat.id,
                          'Оператор с Вами свяжется в ближайшее время, благодарим за обращение !')
@@ -231,6 +227,14 @@ def handle_contact(msg):
     else:
         db_insert_phone(msg.from_user.id, phone)
 
+    if exist_request(msg.chat.id):
+        pass
+    else:
+        db_insert_user_request(msg.chat.id, str(Target.show_query()) )
+        # send_request_to_crm(get_name(msg.chat.id), get_phone(msg.chat.id), str(Target.show_query()))
+    
+    Target.clear_query()
+    
 
 @bot.message_handler(content_types=['text'])
 def investment(msg):    msg = bot.send_message(msg.chat.id,

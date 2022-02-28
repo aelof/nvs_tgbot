@@ -1,6 +1,18 @@
 from enum import Enum
 import pandas as pd
 import sqlite3
+import requests
+
+
+def send_request_to_crm(name, phone, message):
+
+    description = 'tg_bt_fc_test'
+    token = '7583b2c7bf4c622738b149717fae722e'
+    department = 21
+    source = 10
+    url = f'https://novostroy-gel.yucrm.ru/api/orders/post?description={description}&name={name}&oauth_token={token}&message=Запрос:{message}&department={department}&source={source}&phone={phone}'
+    r = requests.get(url)
+    return r.status_code
 
 
 # db file to class States
@@ -12,10 +24,11 @@ conn = sqlite3.connect('Users.db', check_same_thread=False)
 conn.row_factory = lambda cursor, row: row[0]
 cursor = conn.cursor()
 
+
 def sql_to_csv():
 
     conn = sqlite3.connect('Users.db', isolation_level=None,
-                       detect_types=sqlite3.PARSE_COLNAMES)
+                           detect_types=sqlite3.PARSE_COLNAMES)
     db_df = pd.read_sql_query("SELECT * FROM Users", conn)
     db_df.to_csv('Users.csv', index=False)
     return True
@@ -28,7 +41,8 @@ def db_insert_user_info(name, user_id, firstname, username, reg_date):
 
 
 def db_insert_user_request(id, user_request):
-    cursor.execute('UPDATE Users SET request = ? WHERE user_id = ?', (user_request, id) )
+    cursor.execute(
+        'UPDATE Users SET request = ? WHERE user_id = ?', (user_request, id))
     conn.commit()
 
 
@@ -131,7 +145,7 @@ class Target:
         Target.QUERY.clear()
 
 
-# --- STRINGS AND LISTS --- 
+# --- STRINGS AND LISTS ---
 
 hello = '''🙋‍♂️ 
 Я - Владимир, Ваш виртуальный помошник компании НОВОСТРОЙ!
