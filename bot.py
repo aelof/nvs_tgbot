@@ -1,7 +1,8 @@
 import telebot
 from config import TOKEN
 import dbworker
-import logging, os 
+import logging
+import os
 from datetime import datetime
 from helpers import States, Target, User, db_insert_user_request, exist_name, exist_request, get_name, sql_to_csv, admin_help
 from helpers import exist_phone, db_insert_user_info, get_ids, db_get_link, db_insert_phone, get_phone
@@ -19,9 +20,8 @@ telebot.logger.setLevel(logging.INFO)
 
 bot = telebot.TeleBot(TOKEN, parse_mode='HTML')
 
+
 # handler for test
-
-
 @bot.message_handler(commands=['test'])
 def cmd_start(msg):
     if msg.from_user.id == 239090651:
@@ -53,7 +53,7 @@ def entering_kush(msg):
     bot.send_message(msg.chat.id,
                      f'Перенаправляю Вас в главное меню\n'
                      '\nЕсли Вам ранее не приходилось работать с чат-ботами, нажмите "Помощь" на клавиатуре',
-                      reply_markup=menu_markup)
+                     reply_markup=menu_markup)
 
     dbworker.set_state(msg.from_user.id, States.MENU.value)
 
@@ -79,26 +79,27 @@ def admin_message(msg):
     if msg.text == '/exportdb':
         if sql_to_csv():
             path_to_db = os.getcwd() + '/Users.csv'
-            f = open(path_to_db,"rb")
+            f = open(path_to_db, "rb")
             bot.send_document(msg.chat.id, document=f)
-        else: 
-            bot.send_message(msg.chat.id, 'Произошла ошибка, напишите @alexpure')
+        else:
+            bot.send_message(
+                msg.chat.id, 'Произошла ошибка, напишите @alexpure')
 
 
-# def send_to_all(msg):
-#     for chat_id in get_ids():
-#         try:
-#             bot.send_message(chat_id, msg.text)
-#         except Exception as e:
-#             bot.send_message(
-#                 msg.chat.id, f'пользователь {chat_id} заблокировал бота')
+def send_to_all(msg):
+    for chat_id in get_ids():
+        try:
+            bot.send_message(chat_id, msg.text)
+        except Exception as e:
+            bot.send_message(
+                msg.chat.id, f'пользователь {chat_id} заблокировал бота')
 
 
 @bot.message_handler(func=lambda msg: msg.text in menu_list)
 def search_obj(msg):
     if msg.text == 'Контакты':
         bot.send_message(
-            msg.chat.id, contacts) 
+            msg.chat.id, contacts)
     elif msg.text == 'Помощь':
         bot.send_message(
             msg.chat.id, help)
@@ -182,7 +183,7 @@ def before_final(msg):
             if exist_request(msg.chat.id):
                 pass
             else:
-                db_insert_user_request(msg.chat.id, str(Target.show_query()) )
+                db_insert_user_request(msg.chat.id, str(Target.show_query()))
             Target.clear_query()
 
         else:
@@ -213,7 +214,7 @@ def handle_contact(msg):
         bot.send_message(msg.chat.id,
                          '<i>Для удобства Вы перенеправлены в главное меню</i>',
                          reply_markup=menu_markup,  disable_notification=True)
-    
+
     else:
         bot.send_message(msg.chat.id,
                          'Оператор с Вами свяжется в ближайшее время, благодарим за обращение !')
@@ -230,16 +231,16 @@ def handle_contact(msg):
     if exist_request(msg.chat.id):
         pass
     else:
-        db_insert_user_request(msg.chat.id, str(Target.show_query()) )
+        db_insert_user_request(msg.chat.id, str(Target.show_query()))
         # send_request_to_crm(get_name(msg.chat.id), get_phone(msg.chat.id), str(Target.show_query()))
-    
+
     Target.clear_query()
-    
+
 
 @bot.message_handler(content_types=['text'])
 def investment(msg):    msg = bot.send_message(msg.chat.id,
-                           'Что-то пошло не так, попробуйте перезагрузить командой  /start',
-                           reply_markup=general_markup)
+                                               'Что-то пошло не так, попробуйте перезагрузить командой  /start',
+                                               reply_markup=general_markup)
 
 
 bot.infinity_polling(timeout=18, skip_pending=True)
