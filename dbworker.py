@@ -9,7 +9,7 @@ def get_current_state(user_id):
             # Если используете Vedis версии ниже, чем 0.7.1, то .decode() НЕ НУЖЕН
             return db[user_id].decode()
         except KeyError:  # Если такого ключа почему-то не оказалось
-            return States.START.value  # значение по умолчанию - начало диалога
+            return States.MENU.value  # значение по умолчанию - начало диалога
 
 
 # Сохраняем текущее «состояние» пользователя в нашу базу
