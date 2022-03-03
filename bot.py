@@ -243,4 +243,4 @@ def investment(msg):    msg = bot.send_message(msg.chat.id,
                                                reply_markup=general_markup)
 
 
-bot.infinity_polling(timeout=18, skip_pending=True)
+bot.infinity_polling(skip_pending=True)
